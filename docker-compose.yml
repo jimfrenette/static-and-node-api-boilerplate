@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+
+  app:
+    image: node:alpine
+    ## optional container_name
+    # container_name: "dev_node"
+    user: "node"
+    working_dir: /home/node/app
+    labels:
+    #  - 'traefik.backend=dev_node'
+      - 'traefik.frontend.rule=Host: localhost; PathPrefix: /api'
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./api:/home/node/app
+      - ./api/node_modules:/home/node/node_modules
+    expose:
+      - "1337"
+    command: "node ./src/server/index.js"
+
+  nginx:
+    image: nginx
+    ## optional container_name
+    # container_name: "dev_nginx"
+    labels:
+    #  - 'traefik.backend=dev_nginx'
+      - 'traefik.frontend.rule=Host: localhost'
+    volumes:
+      - ./html:/usr/share/nginx/html
+
+  traefik:
+    image: traefik
+    ## optional container_name
+    # container_name: "dev_traefik"
+    command: -c /dev/null --docker --logLevel=INFO
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
